@@ -55,12 +55,13 @@ fi
 
 # Configuration
 GO_VERSION="1.22.0"
-INSTALL_DIR="/usr/local/evilginx"
+INSTALL_DIR="/usr/local/bin"
+INSTALL_BASE="/opt/evilginx"
 SERVICE_USER="root"  # Run as admin
 CONFIG_DIR="/etc/evilginx"
 LOG_DIR="/var/log/evilginx"
-PHISHLETS_DIR="/usr/local/evilginx/phishlets"
-REDIRECTORS_DIR="/usr/local/evilginx/redirectors"
+PHISHLETS_DIR="/opt/evilginx/phishlets"
+REDIRECTORS_DIR="/opt/evilginx/redirectors"
 
 #############################################################################
 # Helper Functions
@@ -492,37 +493,82 @@ build_evilginx() {
     mkdir -p "$LOG_DIR"
     mkdir -p "$CONFIG_DIR"
     
-    # Remove old binary if exists (after stopping services)
-    if [ -f "$INSTALL_DIR/evilginx" ]; then
+    # Remove old binaries if they exist (after stopping services)
+    if [ -f "$INSTALL_BASE/evilginx.bin" ]; then
         log_info "Removing old binary..."
-        rm -f "$INSTALL_DIR/evilginx"
+        rm -f "$INSTALL_BASE/evilginx.bin"
+    fi
+    if [ -f "/usr/local/bin/evilginx" ]; then
+        log_info "Removing old wrapper script..."
+        rm -f "/usr/local/bin/evilginx"
     fi
     
-    # Copy binary to /usr/local/bin
-    log_info "Installing binary to /usr/local/bin..."
-    cp "$BUILD_DIR/build/evilginx" "$INSTALL_DIR/evilginx"
-    chmod +x "$INSTALL_DIR/evilginx"
+    # Copy binary to /opt/evilginx (actual binary location)
+    log_info "Installing binary to $INSTALL_BASE..."
+    mkdir -p "$INSTALL_BASE"
+    cp "$BUILD_DIR/build/evilginx" "$INSTALL_BASE/evilginx.bin"
+    chmod +x "$INSTALL_BASE/evilginx.bin"
     
     # Copy phishlets and redirectors to /opt/evilginx
     log_info "Installing phishlets and redirectors..."
     cp -r "$BUILD_DIR/phishlets" "$INSTALL_BASE/"
     cp -r "$BUILD_DIR/redirectors" "$INSTALL_BASE/"
     
-    # Create system-wide installation directory
-    mkdir -p "$INSTALL_DIR"
-    mkdir -p "$PHISHLETS_DIR"
-    
-    # Copy files
-    log_info "Installing files to $INSTALL_DIR..."
-    cp "$BUILD_DIR/build/evilginx" "$INSTALL_DIR/evilginx.bin"
-    cp -r "$BUILD_DIR/redirectors" "$INSTALL_DIR/"
-    
-    # Create wrapper script with default paths
+    # Create wrapper script with default paths at /usr/local/bin/evilginx
     log_info "Creating system-wide wrapper script..."
-    cat > /usr/local/bin/evilginx << 'EOF'
+    cat > /usr/local/bin/evilginx << EOF
 #!/bin/bash
-# Evilginx wrapper with default paths
-exec /usr/local/evilginx/evilginx.bin -p /usr/local/evilginx/phishlets -t /usr/local/evilginx/redirectors "$@"
+# Evilginx wrapper script with default paths
+# Automatically loads phishlets and redirectors from system directories
+
+# Default paths
+PHISHLETS_PATH="$PHISHLETS_DIR"
+REDIRECTORS_PATH="$REDIRECTORS_DIR"
+CONFIG_PATH="\$HOME/.evilginx"
+
+# Check if user provided paths, otherwise use defaults
+ARGS=()
+HAS_P_FLAG=false
+HAS_T_FLAG=false
+HAS_C_FLAG=false
+
+while [[ \$# -gt 0 ]]; do
+    case \$1 in
+        -p)
+            HAS_P_FLAG=true
+            ARGS+=("\$1")
+            shift
+            ;;
+        -t)
+            HAS_T_FLAG=true
+            ARGS+=("\$1")
+            shift
+            ;;
+        -c)
+            HAS_C_FLAG=true
+            ARGS+=("\$1")
+            shift
+            ;;
+        *)
+            ARGS+=("\$1")
+            shift
+            ;;
+    esac
+done
+
+# Add default paths if not provided
+if [ "\$HAS_P_FLAG" = false ]; then
+    ARGS=("-p" "\$PHISHLETS_PATH" "\${ARGS[@]}")
+fi
+if [ "\$HAS_T_FLAG" = false ]; then
+    ARGS=("-t" "\$REDIRECTORS_PATH" "\${ARGS[@]}")
+fi
+if [ "\$HAS_C_FLAG" = false ]; then
+    ARGS=("-c" "\$CONFIG_PATH" "\${ARGS[@]}")
+fi
+
+# Run evilginx binary with constructed arguments
+exec $INSTALL_BASE/evilginx.bin "\${ARGS[@]}"
 EOF
     chmod +x /usr/local/bin/evilginx
     

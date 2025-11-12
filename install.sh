@@ -32,6 +32,27 @@ PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Get script directory - handle both direct execution and sudo execution
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
+else
+    SCRIPT_PATH="$0"
+fi
+
+# Resolve to absolute path
+if [[ "$SCRIPT_PATH" = /* ]]; then
+    # Already absolute
+    SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+else
+    # Relative path - resolve it
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+fi
+
+# Final fallback: if still empty or doesn't exist, use current directory
+if [[ -z "$SCRIPT_DIR" ]] || [[ ! -d "$SCRIPT_DIR" ]]; then
+    SCRIPT_DIR="$(pwd)"
+fi
+
 # Configuration
 GO_VERSION="1.22.0"
 INSTALL_DIR="/usr/local/evilginx"
@@ -345,6 +366,9 @@ disable_systemd_resolved() {
     # Handle /etc/resolv.conf
     log_info "Configuring /etc/resolv.conf..."
     
+    # Remove immutable attribute if set
+    chattr -i /etc/resolv.conf 2>/dev/null || true
+    
     # Backup existing resolv.conf
     if [ -f /etc/resolv.conf ]; then
         cp /etc/resolv.conf /etc/resolv.conf.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
@@ -353,11 +377,11 @@ disable_systemd_resolved() {
     # Remove symlink if it exists
     if [ -L /etc/resolv.conf ]; then
         log_info "Removing /etc/resolv.conf symlink..."
-        rm -f /etc/resolv.conf
+        rm -f /etc/resolv.conf 2>/dev/null || true
     fi
     
-    # Create static resolv.conf with public DNS servers
-    cat > /etc/resolv.conf << 'RESOLVEOF'
+    # Try to create static resolv.conf with public DNS servers
+    if cat > /etc/resolv.conf 2>/dev/null << 'RESOLVEOF'
 # Static DNS configuration for Evilginx
 # systemd-resolved disabled to free port 53
 
@@ -372,11 +396,13 @@ nameserver 1.1.1.1
 options timeout:2
 options attempts:3
 RESOLVEOF
-    
-    log_success "Static /etc/resolv.conf created with public DNS servers"
-    
-    # Make resolv.conf immutable (optional)
-    chattr +i /etc/resolv.conf 2>/dev/null || true
+    then
+        log_success "Static /etc/resolv.conf created with public DNS servers"
+    else
+        log_warning "Failed to create /etc/resolv.conf - file may be protected"
+        log_info "DNS resolution should still work via existing configuration"
+        log_info "If DNS issues occur, manually configure /etc/resolv.conf after installation"
+    fi
     
     log_success "systemd-resolved disabled - Port 53 available for Evilginx"
 }
@@ -384,24 +410,76 @@ RESOLVEOF
 build_evilginx() {
     log_step "Step 6: Building and Installing Evilginx"
     
-    log_info "Building from: $SCRIPT_DIR"
+    # Find the Evilginx root directory (where main.go is located)
+    # Start with current directory
+    BUILD_DIR="$(pwd)"
     
-    # Check if we're in the Evilginx directory
-    if [[ ! -f "$SCRIPT_DIR/main.go" ]]; then
-        log_error "main.go not found in $SCRIPT_DIR"
-        log_error "Please run this script from the Evilginx root directory"
+    # Check if main.go is in current directory
+    if [[ -f "$BUILD_DIR/main.go" ]]; then
+        log_info "Found main.go in current directory: $BUILD_DIR"
+    else
+        # Try to find it in common locations
+        if [[ -f "$HOME/Evilginx3/main.go" ]]; then
+            BUILD_DIR="$HOME/Evilginx3"
+            log_info "Found main.go in: $BUILD_DIR"
+        elif [[ -f "/root/Evilginx3/main.go" ]]; then
+            BUILD_DIR="/root/Evilginx3"
+            log_info "Found main.go in: $BUILD_DIR"
+        else
+            # Try script's directory
+            if [[ -n "${BASH_SOURCE[0]}" ]]; then
+                SCRIPT_PATH="${BASH_SOURCE[0]}"
+            else
+                SCRIPT_PATH="$0"
+            fi
+            
+            if [[ "$SCRIPT_PATH" = /* ]]; then
+                TRY_DIR="$(dirname "$SCRIPT_PATH")"
+            else
+                TRY_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+            fi
+            
+            if [[ -f "$TRY_DIR/main.go" ]]; then
+                BUILD_DIR="$TRY_DIR"
+                log_info "Found main.go in script directory: $BUILD_DIR"
+            else
+                log_error "Cannot find main.go!"
+                log_error "Current directory: $(pwd)"
+                log_error "Script path: $SCRIPT_PATH"
+                log_error "Tried directories:"
+                log_error "  - $(pwd)"
+                log_error "  - $HOME/Evilginx3"
+                log_error "  - /root/Evilginx3"
+                log_error "  - $TRY_DIR"
+                log_error ""
+                log_error "Current directory contents:"
+                ls -la "$(pwd)" 2>/dev/null | head -20 || true
+                log_error ""
+                log_error "Please run: cd ~/Evilginx3 && sudo ./install.sh"
+                exit 1
+            fi
+        fi
+    fi
+    
+    # Change to build directory
+    cd "$BUILD_DIR"
+    log_info "Building from: $(pwd)"
+    
+    # Verify main.go exists
+    if [[ ! -f "main.go" ]]; then
+        log_error "main.go not found in $BUILD_DIR after changing directory!"
         exit 1
     fi
     
     # Build
     log_info "Downloading Go dependencies..."
-    cd "$SCRIPT_DIR"
+    cd "$BUILD_DIR"
     /usr/local/go/bin/go mod download
     
     log_info "Compiling Evilginx..."
     /usr/local/go/bin/go build -o build/evilginx main.go
     
-    if [[ ! -f "$SCRIPT_DIR/build/evilginx" ]]; then
+    if [[ ! -f "$BUILD_DIR/build/evilginx" ]]; then
         log_error "Build failed - binary not created"
         exit 1
     fi
@@ -422,13 +500,13 @@ build_evilginx() {
     
     # Copy binary to /usr/local/bin
     log_info "Installing binary to /usr/local/bin..."
-    cp "$SCRIPT_DIR/build/evilginx" "$INSTALL_DIR/evilginx"
+    cp "$BUILD_DIR/build/evilginx" "$INSTALL_DIR/evilginx"
     chmod +x "$INSTALL_DIR/evilginx"
     
     # Copy phishlets and redirectors to /opt/evilginx
     log_info "Installing phishlets and redirectors..."
-    cp -r "$SCRIPT_DIR/phishlets" "$INSTALL_BASE/"
-    cp -r "$SCRIPT_DIR/redirectors" "$INSTALL_BASE/"
+    cp -r "$BUILD_DIR/phishlets" "$INSTALL_BASE/"
+    cp -r "$BUILD_DIR/redirectors" "$INSTALL_BASE/"
     
     # Create system-wide installation directory
     mkdir -p "$INSTALL_DIR"
@@ -436,8 +514,8 @@ build_evilginx() {
     
     # Copy files
     log_info "Installing files to $INSTALL_DIR..."
-    cp "$SCRIPT_DIR/build/evilginx" "$INSTALL_DIR/evilginx.bin"
-    cp -r "$SCRIPT_DIR/redirectors" "$INSTALL_DIR/"
+    cp "$BUILD_DIR/build/evilginx" "$INSTALL_DIR/evilginx.bin"
+    cp -r "$BUILD_DIR/redirectors" "$INSTALL_DIR/"
     
     # Create wrapper script with default paths
     log_info "Creating system-wide wrapper script..."
@@ -450,14 +528,14 @@ EOF
     
     # Copy all documentation
     log_info "Copying documentation to $INSTALL_BASE..."
-    cp "$SCRIPT_DIR/README.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/DEPLOYMENT_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/BEST_PRACTICES.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/SESSION_FORMATTING_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/LINUX_VPS_SETUP.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/TELEGRAM_NOTIFICATIONS.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/NEW_PHISHLETS_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
-    cp "$SCRIPT_DIR/PATH_AUTO_DETECTION.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/README.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/DEPLOYMENT_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/BEST_PRACTICES.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/SESSION_FORMATTING_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/LINUX_VPS_SETUP.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/TELEGRAM_NOTIFICATIONS.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/NEW_PHISHLETS_GUIDE.md" "$INSTALL_BASE/" 2>/dev/null || true
+    cp "$BUILD_DIR/PATH_AUTO_DETECTION.md" "$INSTALL_BASE/" 2>/dev/null || true
     chmod -R 755 "$PHISHLETS_DIR"
     chmod -R 755 "$REDIRECTORS_DIR"
     # No need to change ownership when running as admin
@@ -783,6 +861,35 @@ display_completion() {
 
 main() {
     print_banner
+    
+    # Ensure we're in the correct directory
+    if [[ ! -f "$SCRIPT_DIR/main.go" ]]; then
+        # Try to find main.go in current directory
+        if [[ -f "$(pwd)/main.go" ]]; then
+            SCRIPT_DIR="$(pwd)"
+            log_info "Using current directory: $SCRIPT_DIR"
+        else
+            # Try common locations
+            if [[ -f "$HOME/Evilginx3/main.go" ]]; then
+                SCRIPT_DIR="$HOME/Evilginx3"
+                log_info "Found Evilginx3 in home directory: $SCRIPT_DIR"
+            elif [[ -f "/root/Evilginx3/main.go" ]]; then
+                SCRIPT_DIR="/root/Evilginx3"
+                log_info "Found Evilginx3 in /root: $SCRIPT_DIR"
+            fi
+        fi
+    fi
+    
+    # Change to script directory to ensure we're in the right place
+    if [[ -d "$SCRIPT_DIR" ]] && [[ -f "$SCRIPT_DIR/main.go" ]]; then
+        cd "$SCRIPT_DIR"
+        log_info "Changed to directory: $(pwd)"
+    else
+        log_error "Cannot find Evilginx root directory with main.go"
+        log_error "SCRIPT_DIR: $SCRIPT_DIR"
+        log_error "Current directory: $(pwd)"
+        exit 1
+    fi
     
     # Pre-installation checks
     check_root

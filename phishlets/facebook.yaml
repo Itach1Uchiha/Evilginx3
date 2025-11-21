@@ -45,6 +45,7 @@ auth_tokens:
   - domain: '.facebook.com'
     keys: ['c_user', 'xs']
     type: 'cookie'
+    force_post: false
 
 credentials:
   username:

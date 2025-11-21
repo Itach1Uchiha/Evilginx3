@@ -33,18 +33,19 @@ auth_tokens:
   - domain: '.booking.com'
     keys: ['bkng', 'BJS', 'cors_js', 'lastSeen', 'bkng_prf', 'bkng_sso_auth', 'bkng_sso_ses']
     type: 'cookie'
+    force_post: false
   
   # Session and tracking cookies
   - domain: '.booking.com'
     keys: ['pcm_consent', 'pcm_personalization', 'pcm_personalization_disabled', '_ga', '_gid', 'OptanonConsent']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # Loyalty and preferences
   - domain: '.booking.com'
     keys: ['BLA', 'BLA_NA', 'genius_ab_tests', 'currency']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

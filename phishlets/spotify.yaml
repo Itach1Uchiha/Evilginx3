@@ -33,24 +33,25 @@ auth_tokens:
   - domain: '.spotify.com'
     keys: ['sp_dc', 'sp_key', 'sp_t', 'sp_landing', 'sp_landing_*']
     type: 'cookie'
+    force_post: false
   
   # Session and security cookies
   - domain: '.spotify.com'
     keys: ['__bon', 'spotify_app_version', 'spotify_playback_state']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # OAuth tokens
   - domain: '.spotify.com'
     keys: ['access_token', 'refresh_token', 'token_type', 'expires_in']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # User preferences
   - domain: '.spotify.com'
     keys: ['locale', 'preferred_locale', 'theme']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

